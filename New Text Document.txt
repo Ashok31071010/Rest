@@ -1,0 +1,95 @@
+import static com.kms.katalon.core.checkpoint.CheckpointFactory.findCheckpoint
+import static com.kms.katalon.core.testcase.TestCaseFactory.findTestCase
+import static com.kms.katalon.core.testdata.TestDataFactory.findTestData
+import static com.kms.katalon.core.testobject.ObjectRepository.findTestObject
+import static com.kms.katalon.core.testobject.ObjectRepository.findWindowsObject
+import com.kms.katalon.core.checkpoint.Checkpoint as Checkpoint
+import com.kms.katalon.core.cucumber.keyword.CucumberBuiltinKeywords as CucumberKW
+import com.kms.katalon.core.mobile.keyword.MobileBuiltInKeywords as Mobile
+import com.kms.katalon.core.model.FailureHandling as FailureHandling
+import com.kms.katalon.core.testcase.TestCase as TestCase
+import com.kms.katalon.core.testdata.TestData as TestData
+import com.kms.katalon.core.testng.keyword.TestNGBuiltinKeywords as TestNGKW
+import com.kms.katalon.core.testobject.TestObject as TestObject
+import com.kms.katalon.core.webservice.keyword.WSBuiltInKeywords as WS
+import com.kms.katalon.core.webui.keyword.WebUiBuiltInKeywords as WebUI
+import com.kms.katalon.core.windows.keyword.WindowsBuiltinKeywords as Windows
+import internal.GlobalVariable as GlobalVariable
+import org.openqa.selenium.Keys as Keys
+import com.kms.katalon.core.util.KeywordUtil as KeywordUtil
+import groovy.json.JsonSlurper as JsonSlurper
+import java.time.Instant as Instant
+import java.math.*
+import com.google.gson.Gson
+import com.google.gson.JsonObject
+import org.json.JSONArray
+import org.json.JSONObject
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import com.kms.katalon.core.testobject.RequestObject
+import com.kms.katalon.core.testobject.ResponseObject
+import com.kms.katalon.core.testobject.ConditionType
+
+
+// Verification of germany langugae with get endpoint
+
+sResponse = WS.sendRequest(findTestObject('Matterhorn_Rest Services/Get_germany', [('ApimURL') : GlobalVariable.ApimURL,('API_Key'): GlobalVariable.API_Key]))	 
+WS.verifyResponseStatusCode(sResponse, 200)
+
+// Verification of germany langugae with get endpoint
+sResponse = WS.sendRequest(findTestObject('Matterhorn_Rest Services/Get_alemania', [('ApimURL') : GlobalVariable.ApimURL,('API_Key'): GlobalVariable.API_Key]))
+	 
+WS.verifyResponseStatusCode(sResponse, 200)
+
+// Verification of germany langugae with get endpoint
+
+sResponse = WS.sendRequest(findTestObject('Matterhorn_Rest Services/Get_Saksamaa', [('ApimURL') : GlobalVariable.ApimURL,('API_Key'): GlobalVariable.API_Key]))
+	 
+WS.verifyResponseStatusCode(sResponse, 200)
+
+// Function to read translations from Excel
+def readTranslationsFromExcel(String filePath) {
+	FileInputStream inputStream = new FileInputStream(filePath)
+	Workbook workbook = new XSSFWorkbook(inputStream)
+	Sheet sheet = workbook.getSheetAt(0) // Assuming data is in the first sheet
+
+	List<String> translations = []
+	for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+		Row row = sheet.getRow(i)
+		Cell cell = row.getCell(0) // Assuming translations are in the first column
+		translations.add(cell.getStringCellValue().trim())
+	}
+
+	workbook.close()
+	inputStream.close()
+
+	return translations
+}
+
+// Define Excel file path
+String excelFilePath = 'C://Users/automation/Pictures/Translation.xlsx'
+List<String> translations = readTranslationsFromExcel(excelFilePath)
+
+// Base URL for the API
+String baseUrl = 'https://restcountries.com/v3.1/translation/germany'
+
+// Loop through each translation and make GET requests
+for (String translation : translations) {
+	String apiUrl = baseUrl + URLEncoder.encode(translation, 'UTF-8')
+	
+	// Create a request object
+	//RequestObject request = new RequestObjectBuilder()
+		.withHttpMethod('GET')
+		.withRestUrl(apiUrl)
+		.build()
+
+	// Send the request
+	ResponseObject response = WS.sendRequest(request)
+
+	// Assertion: Check response status code
+	def statusCode = response.getStatusCode()
+	KeywordUtil.logInfo("Translation: ${translation}, Status Code: ${statusCode}")
+	
+	// Add more assertions as needed
+	assert statusCode == 200
+}
